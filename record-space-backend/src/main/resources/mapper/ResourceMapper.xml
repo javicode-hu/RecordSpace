@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hjw.mapper.ResourceMapper">
+
+
+
+    <select id="searchResourceByUserId" resultType="com.hjw.domain.entity.Resource">
+        select a.*
+        from rs_resource a
+        <if test="searchDto.userId!=null ">
+            inner join rs_sys_user b on a.user_id = b.id and b.id = #{searchDto.userId}
+        </if>
+        <where>
+            <if test="searchDto.searchKey!='' and searchDto.searchKey!=null ">
+                a.name like concat('%',#{searchDto.searchKey},'%')
+                or  a.description like concat('%',#{searchDto.searchKey},'%')
+            </if>
+            <if test="searchDto.categoryIds!= null and searchDto.categoryIds.size()>0">
+               and a.category_id in
+                <foreach collection="searchDto.categoryIds" item="item" open="(" close=")" separator="," >
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        <if test="searchDto.sortParam!='' and searchDto.sortParam!=null">
+            order by ${searchDto.sortParam}
+        </if>
+        <if test="searchDto.sortMethod!='' and searchDto.sortMethod!=null ">
+            ${searchDto.sortMethod}
+        </if>
+    </select>
+</mapper>

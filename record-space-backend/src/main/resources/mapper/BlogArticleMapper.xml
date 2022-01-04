@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hjw.mapper.BlogArticleMapper">
+
+    <resultMap id="ArticleItemMap" type="com.hjw.domain.vo.ArticleItemVo">
+        <id column="id" property="id" />
+        <collection property="tagList" javaType="ArrayList" ofType="com.hjw.domain.entity.BlogTag" column="id"
+                    select="listTagByArticleId"/>
+    </resultMap>
+
+    <resultMap id="ArticleDetailMap" type="com.hjw.domain.vo.ArticleDetailVo">
+        <id column="id" property="id" />
+        <collection property="tagList" javaType="ArrayList" ofType="com.hjw.domain.entity.BlogTag" column="id"
+                    select="listTagByArticleId"/>
+        <collection property="columnList" javaType="ArrayList" ofType="com.hjw.domain.entity.BlogColumn" column="id"
+                    select="listColumnByArticleId"/>
+    </resultMap>
+    
+    <select id="listTagByArticleId" resultType="com.hjw.domain.entity.BlogTag">
+        select * from rs_blog_tag a,rs_article_related_tag b
+        where a.id = b.tag_id and b.article_id = #{id}
+    </select>
+
+    <select id="listColumnByArticleId" resultType="com.hjw.domain.entity.BlogColumn">
+        select * from rs_blog_column a,rs_article_related_column b
+        where a.id = b.column_id and b.article_id = #{id}
+    </select>
+
+    <select id="getBlogArticleById" resultMap="ArticleDetailMap">
+        select a.id,a.title,a.content,a.create_time,a.like_count,a.view_count,b.nickname as author
+        from rs_blog_article a,rs_sys_user b
+        where a.user_id = b.id and a.id = #{id}
+        limit 1
+    </select>
+
+    <select id="searchBlogArticleByUserId" resultMap="ArticleItemMap">
+        select a.id,a.title,a.content,a.create_time,a.like_count,a.view_count,b.nickname as author
+        from rs_blog_article a
+        <if test="searchDto.userId!=null ">
+            inner join rs_sys_user b on a.user_id = b.id and b.id = #{searchDto.userId}
+        </if>
+        <if test="searchDto.columnId!=null ">
+            inner join rs_article_related_column c on a.id = c.article_id and c.column_id = #{searchDto.columnId}
+        </if>
+        <if test="searchDto.tagId!=null ">
+            inner join rs_article_related_tag d on a.id = d.article_id and d.tag_id = #{searchDto.tagId}
+        </if>
+        <where>
+            <if test="searchDto.searchKey!='' and searchDto.searchKey!=null ">
+                a.title like concat('%',#{searchDto.searchKey},'%')
+                or  a.content like concat('%',#{searchDto.searchKey},'%')
+            </if>
+        </where>
+        <if test="searchDto.sortParam!='' and searchDto.sortParam!=null">
+            order by ${searchDto.sortParam}
+        </if>
+        <if test="searchDto.sortMethod!='' and searchDto.sortMethod!=null ">
+            ${searchDto.sortMethod}
+        </if>
+    </select>
+
+</mapper>
